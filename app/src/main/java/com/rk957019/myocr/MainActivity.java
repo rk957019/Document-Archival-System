@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         {
             case R.id.action_upload:
                 // To do Things;
+                CameraImage.dispatchTakePictureIntent(getApplicationContext(),this);
                 return  true;
             case R.id.action_help:
                 // To do things
