@@ -35,7 +35,7 @@ import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 
 
 public class MainActivity extends AppCompatActivity {
-   // static final int REQUEST_IMAGE_CAPTURE = 1;
+   static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_GALLERY_IMAGE = 2;
 
     ImageView imageView ;
@@ -71,6 +71,12 @@ public class MainActivity extends AppCompatActivity {
             imageURi = data.getData();
             useImageUri(imageURi);
         }
+        if(requestCode==REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK)
+        {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            imageView.setImageBitmap(imageBitmap);
+        }
     }
 
     @Override
@@ -86,7 +92,12 @@ public class MainActivity extends AppCompatActivity {
         {
             case R.id.action_upload:
                 // To do Things;
-                CameraImage.dispatchTakePictureIntent(getApplicationContext(),this);
+//                CameraImage.dispatchTakePictureIntent(getApplicationContext(),this);
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null)
+                {
+                  startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
                 return  true;
             case R.id.action_help:
                 // To do things
