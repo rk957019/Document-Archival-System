@@ -21,6 +21,4 @@ public class CameraImage
             activity.startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
-
-
 }
