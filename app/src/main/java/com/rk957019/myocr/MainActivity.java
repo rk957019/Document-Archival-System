@@ -1,15 +1,22 @@
 package com.rk957019.myocr;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -37,6 +44,11 @@ import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,9 +57,11 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
    static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_GALLERY_IMAGE = 2;
+    public static boolean permission;
 
     ImageView imageView ;
     Button galleryBtn;
+    Button uploadBtn;
     Uri imageURi;
     String mCurrentPhotoPath;
 
@@ -56,13 +70,45 @@ public class MainActivity extends AppCompatActivity {
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         imageView = (ImageView) findViewById(R.id.image);
         galleryBtn = (Button) findViewById(R.id.from_gallery);
+        uploadBtn = (Button) findViewById(R.id.upload);
+        isWriteStoragePermissionGranted();
         galleryBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)
             {
                 setImageGallery();
+            }
+        });
+        uploadBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.e("main","meassage");
+                new AsyncTask<Integer, Void, Void>(){
+                    @Override
+                    protected Void doInBackground(Integer... params) {
+                        try {
+
+                            Log.e("main","Message");
+
+                            executeSSHcommand();
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+//                            Toast.makeText(MainActivity.this, "Toast Message",
+//                                    Toast.LENGTH_LONG).show();
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                    }
+                }.execute(1);
             }
         });
     }
@@ -78,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
         if(requestCode == REQUEST_GALLERY_IMAGE && resultCode == RESULT_OK)
         {
             imageURi = data.getData();
+           mCurrentPhotoPath = getRealPathFromURI(getApplicationContext(),imageURi);
             useImageUri(imageURi);
         }
         if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK)
@@ -136,6 +183,9 @@ public class MainActivity extends AppCompatActivity {
                 return  true;
             case R.id.action_help:
                 // To do things
+                Log.e("main","meassage1");
+               // executeSSHcommand();
+
                 return  true;
             case R.id.action_extract:
                 FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(((BitmapDrawable)imageView.getDrawable()).getBitmap());
@@ -255,5 +305,88 @@ public class MainActivity extends AppCompatActivity {
         Uri contentUri = Uri.fromFile(f);
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
+    }
+    public  boolean isWriteStoragePermissionGranted()
+    {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.e("main","Permission is granted2");
+                permission = true;
+                return true;
+            } else
+                {
+
+                Log.e("main","Permission is revoked2");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+                permission =false;
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            permission = true;
+            Log.e("main","Permission is granted2");
+            return true;
+        }
+    }
+    public  void executeSSHcommand()
+    {
+        String user = "rahulkumar.cs17";
+        String password = "10/12/1998";
+        String host = "172.16.1.3";
+        int port=22;
+
+        try{
+
+            JSch jsch = new JSch();
+            Log.e("main","Message1");
+            Session session = jsch.getSession(user, host, port);
+
+            session.setPassword(password);
+
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.setTimeout(10000);
+            session.connect();
+            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+            channel.connect();
+            try {
+                if(isWriteStoragePermissionGranted())
+                    channel.put(mCurrentPhotoPath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android");
+            } catch (SftpException e)
+            {
+                e.printStackTrace();
+            }
+            Log.e("main","Message2");
+            try {
+                Thread.sleep(1_000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            channel.disconnect();
+
+
+        }
+        catch(JSchException e)
+        {
+
+        }
+    }
+    private String getRealPathFromURI(Context context, Uri contentUri)
+    {
+        Cursor cursor = null;
+        try {
+            String[] proj = {MediaStore.Images.Media.DATA};
+            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } catch (Exception e) {
+            Log.e("main", "getRealPathFromURI Exception : " + e.toString());
+            return "";
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
     }
 }

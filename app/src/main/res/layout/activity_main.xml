@@ -17,11 +17,25 @@
         android:layout_height="wrap_content"
         android:layout_weight="0"
         android:id="@+id/detectText"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
         android:text="Import"
+        android:layout_weight="1"
         android:id="@+id/from_gallery"
         android:background="@drawable/background"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:id="@+id/upload"
+            android:layout_weight="1"
+            android:text="Upload"
+            android:background="@drawable/background"/>
+    </LinearLayout>
 </LinearLayout>
