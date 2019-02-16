@@ -32,6 +32,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -44,6 +45,7 @@ import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
+import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -55,7 +57,7 @@ import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity {
-   static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_GALLERY_IMAGE = 2;
     public static boolean permission;
 
@@ -308,14 +310,15 @@ public class MainActivity extends AppCompatActivity {
     }
     public  boolean isWriteStoragePermissionGranted()
     {
-        if (Build.VERSION.SDK_INT >= 23) {
+        if (Build.VERSION.SDK_INT >= 23)
+        {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     == PackageManager.PERMISSION_GRANTED) {
                 Log.e("main","Permission is granted2");
                 permission = true;
                 return true;
             } else
-                {
+            {
 
                 Log.e("main","Permission is revoked2");
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
@@ -336,10 +339,10 @@ public class MainActivity extends AppCompatActivity {
         String host = "172.16.1.3";
         int port=22;
 
-        try{
+        try {
 
             JSch jsch = new JSch();
-            Log.e("main","Message1");
+            Log.e("main", "Message1");
             Session session = jsch.getSession(user, host, port);
 
             session.setPassword(password);
@@ -347,29 +350,54 @@ public class MainActivity extends AppCompatActivity {
             session.setConfig("StrictHostKeyChecking", "no");
             session.setTimeout(10000);
             session.connect();
-            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-            channel.connect();
-            try {
-                if(isWriteStoragePermissionGranted())
-                    channel.put(mCurrentPhotoPath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android");
-            } catch (SftpException e)
+            String text = ActualText.mOcrText.toLowerCase();
+            Log.e("main",text);
+            KeyWords keyWords = new KeyWords();
+            ArrayList<String> KEYWORDS = keyWords.getMkeywords();
+            for (int i = 0; i < KEYWORDS.size(); i++)
             {
-                e.printStackTrace();
-            }
-            Log.e("main","Message2");
-            try {
-                Thread.sleep(1_000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            channel.disconnect();
+
+                String keyword = KEYWORDS.get(i);
+                Log.e("main",keyword);
+
+                if(!text.contains(keyword))continue;
+                ChannelExec channel = (ChannelExec) session.openChannel("exec");
+                channel.setCommand("cd /home/stud/btech/cse/2017/rahulkumar.cs17/android && mkdir " + keyword);
+                channel.connect();
+
+                Log.e("main", "Message2");
+                try {
+                    Thread.sleep(1_000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                channel.disconnect();
+                ChannelSftp channel2 = (ChannelSftp) session.openChannel("sftp");
+                channel2.connect();
+                try
+                {
+                    if (isWriteStoragePermissionGranted())
+                        channel2.put(mCurrentPhotoPath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword);
+                } catch (SftpException e)
+                {
+                    e.printStackTrace();
+                }
+                Log.e("main", "Message3");
+                try {
+                    Thread.sleep(1_000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                channel2.disconnect();
 
 
+            }
         }
         catch(JSchException e)
-        {
+            {
 
-        }
+            }
+
     }
     private String getRealPathFromURI(Context context, Uri contentUri)
     {
