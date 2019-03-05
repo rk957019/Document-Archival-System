@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_GALLERY_IMAGE = 2;
     public static boolean permission;
+    public boolean check = false;
 
     ImageView imageView ;
     Button galleryBtn;
@@ -107,7 +108,14 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    protected void onPostExecute(Void aVoid) {
+                    protected void onPostExecute(Void aVoid)
+                    {
+                        if(check)
+                        Toast.makeText(MainActivity.this, "Image Uploaded Successfully!",
+                                 Toast.LENGTH_LONG).show();
+                        if(!check)
+                            Toast.makeText(MainActivity.this, "Image Can't be uploaded!",
+                                    Toast.LENGTH_LONG).show();
                         super.onPostExecute(aVoid);
                     }
                 }.execute(1);
@@ -136,7 +144,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
@@ -185,9 +192,10 @@ public class MainActivity extends AppCompatActivity {
                 return  true;
             case R.id.action_help:
                 // To do things
-                Log.e("main","meassage1");
+               // Log.e("main","meassage1");
                // executeSSHcommand();
-
+                Intent intent = new Intent(MainActivity.this,FileSearching.class);
+                startActivity(intent);
                 return  true;
             case R.id.action_extract:
                 FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(((BitmapDrawable)imageView.getDrawable()).getBitmap());
@@ -359,8 +367,9 @@ public class MainActivity extends AppCompatActivity {
 
                 String keyword = KEYWORDS.get(i);
                 Log.e("main",keyword);
-
+                keyword = keyword.toLowerCase();
                 if(!text.contains(keyword))continue;
+                keyword = keyword.replaceAll("\\s+","");
                 ChannelExec channel = (ChannelExec) session.openChannel("exec");
                 channel.setCommand("cd /home/stud/btech/cse/2017/rahulkumar.cs17/android && mkdir " + keyword);
                 channel.connect();
@@ -378,6 +387,7 @@ public class MainActivity extends AppCompatActivity {
                 {
                     if (isWriteStoragePermissionGranted())
                         channel2.put(mCurrentPhotoPath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword);
+                    check=true;
                 } catch (SftpException e)
                 {
                     e.printStackTrace();
@@ -392,6 +402,50 @@ public class MainActivity extends AppCompatActivity {
 
 
             }
+            Log.e("main","done");
+          ArrayList<ArrayList<String>> twoDKEYWORDS = keyWords.getM2d_keywords();
+            for(int i=0;i<twoDKEYWORDS.size();i++)
+            {
+                for(int j=0;j<twoDKEYWORDS.get(i).size();j++)
+                {
+                    String keyword = twoDKEYWORDS.get(i).get(j);
+                    Log.e("main","done");
+                    Log.e("main",keyword);
+                    keyword = keyword.toLowerCase();
+                    if(!text.contains(keyword))continue;
+                    keyword = keyword.replaceAll("\\s+","");
+                    ChannelExec channel = (ChannelExec) session.openChannel("exec");
+                    channel.setCommand("cd /home/stud/btech/cse/2017/rahulkumar.cs17/android && mkdir " + twoDKEYWORDS.get(i).get(0));
+                    channel.connect();
+
+                    Log.e("main", "Message2");
+                    try {
+                        Thread.sleep(1_000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    channel.disconnect();
+                    ChannelSftp channel2 = (ChannelSftp) session.openChannel("sftp");
+                    channel2.connect();
+                    try
+                    {
+                        if (isWriteStoragePermissionGranted())
+                            channel2.put(mCurrentPhotoPath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0));
+                        check=true;
+                    } catch (SftpException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    Log.e("main", "Message3");
+                    try {
+                        Thread.sleep(1_000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    channel2.disconnect();
+                }
+            }
+
         }
         catch(JSchException e)
             {
@@ -402,13 +456,16 @@ public class MainActivity extends AppCompatActivity {
     private String getRealPathFromURI(Context context, Uri contentUri)
     {
         Cursor cursor = null;
-        try {
+        try
+        {
             String[] proj = {MediaStore.Images.Media.DATA};
             cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             cursor.moveToFirst();
             return cursor.getString(column_index);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             Log.e("main", "getRealPathFromURI Exception : " + e.toString());
             return "";
         } finally {
