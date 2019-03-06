@@ -1,8 +1,14 @@
 package com.rk957019.myocr;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.mbms.DownloadRequest;
+import android.telephony.mbms.MbmsErrors;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -35,6 +41,7 @@ public class FileSearching extends AppCompatActivity
 {
     String result = null;
     String query = null;
+    boolean check = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -115,7 +122,8 @@ public class FileSearching extends AppCompatActivity
                     protected Void doInBackground(Integer... params) {
                         try {
 
-                            downloadFile(adapterView.getItemAtPosition(i).toString());
+
+                            DownloadFile(adapterView.getItemAtPosition(i).toString());
                         } catch (Exception e) {
                             e.printStackTrace();
 //                            Toast.makeText(MainActivity.this, "Toast Message",
@@ -127,8 +135,16 @@ public class FileSearching extends AppCompatActivity
                     @Override
                     protected void onPostExecute(Void aVoid)
                     {
-                          Toast.makeText(FileSearching.this, "File Downloaded!",
+                          if(check)
+                          {
+                          Toast.makeText(FileSearching.this, "File Downloaded Successfully!",
                                Toast.LENGTH_LONG).show();
+                          check=false;
+                          openFile(adapterView.getItemAtPosition(i).toString());
+                          }
+                        else
+                              Toast.makeText(FileSearching.this, "File Can't be downloaded! Please check your connection!",
+                                      Toast.LENGTH_LONG).show();
 
                         super.onPostExecute(aVoid);
                     }
@@ -137,40 +153,77 @@ public class FileSearching extends AppCompatActivity
         });
     }
 
-    private void downloadFile(String fileName) {
+    private void openFile(String filename)
+    {
+        String Filename = filename;
+        if(Filename.contains("/"))
+            Filename = changeFilename(Filename);
+
+       String mFilePath = "/storage/emulated/0/Download/"+Filename;
+
+        File file=new File(mFilePath);
+           Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(Uri.fromFile(file), "text/plain");
+            intent = Intent.createChooser(intent, "Open File");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+
+    }
+
+    private String changeFilename(String filename)
+    {
+        String s = filename;
+        int in = s.indexOf('/');
+        String s1 = s.substring(0,in+1);
+        //Log.e("s1",s1);
+        s=s.replace(s1,"");
+      //  Log.e("s",s);
+        return  s;
+    }
+
+    private void DownloadFile(String s)
+    {
         String user = "rahulkumar.cs17";
         String password = "10/12/1998";
         String host = "172.16.1.3";
         int port = 22;
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-       try
-       {
+        try
+        {
             JSch jsch = new JSch();
 
-        Session session = jsch.getSession(user, host, port);
+            Session session = jsch.getSession(user, host, port);
 
-        session.setPassword(password);
-        Log.e("main", "Message1");
-        java.util.Properties config = new java.util.Properties();
-        config.put("StrictHostKeyChecking", "no");
-        session.setConfig(config);
+            session.setPassword(password);
+            Log.e("main", "Message1");
+            java.util.Properties config = new java.util.Properties();
+            config.put("StrictHostKeyChecking", "no");
+            session.setConfig(config);
 
-        session.setTimeout(10000);
+            session.setTimeout(10000);
 
-        session.connect();
-           try {
-               download(session," /home/stud/btech/cse/2017/rahulkumar.cs17/android/",fileName,"/storage/emulated/0/downloads/");
-           } catch (Exception e) {
+            session.connect();
+
+            ChannelSftp channelSftp =(ChannelSftp) session.openChannel("sftp");
+            channelSftp.connect();
+            try {
+                channelSftp.get("/home/stud/btech/cse/2017/rahulkumar.cs17/android/"+s,"/storage/emulated/0/Download/");
+                check=true;
+            } catch (SftpException e) {
+                e.printStackTrace();
+            }
+
+            try{Thread.sleep(1000);}catch(Exception ee){ee.printStackTrace();}
+            channelSftp.disconnect();
+            session.disconnect();
+
+        }
+        catch (JSchException e)
+        {
                e.printStackTrace();
-           }
-       }
-    catch (JSchException e)
-    {
-
+        }
     }
 
-    }
+
 
 
     private ArrayList<String> processResult(String result)
@@ -241,69 +294,5 @@ public class FileSearching extends AppCompatActivity
 
         return new String(baos.toByteArray());
     }
-    public void download(Session s,String remotePath,String remoteFileName,String localPath)
-            throws Exception
-    {
-        byte[] buffer = new byte[1024];
-        BufferedInputStream bis = null;
-        OutputStream os = null;
-        BufferedOutputStream bos = null;
-        ChannelSftp channelSftp = getChannelToSftpServer(s);
-        if(channelSftp != null){
-            try{
-            //   channelSftp.cd(remotePath);
-                bis = new BufferedInputStream(channelSftp.get("/home/stud/btech/cse/2017/rahulkumar.cs17/android/"+remoteFileName));
-                File newFile = new File(localPath );
-                os = new FileOutputStream(newFile);
-                bos = new BufferedOutputStream(os);
-                int count;
-                while( (count = bis.read(buffer)) > 0) {
-                    bos.write(buffer, 0, count);
-                }
-                // This line is very important, other wise
-                // you will get a 0KB file and when ever you want to
-                // open the file , you will get EOF Exception....
-                bos.flush();
-            }catch (SftpException e) {
-                String message = "SFTP Error while retreiving the file'" + e.getMessage();
-                throw new IOException(message);
-            }
-            catch(Exception ex){
-                String message = "Error while retreiving the file'" + ex.getMessage();
-                throw new Exception(message);
-            }
-            finally {
-                try {
-                   channelSftp.disconnect();
-//                    if( os!=null ) {
-//                        os.close();
-//                    }
-//                    if( bis!=null ) {
-//                        bis.close();
-//                    }
-//                    if( bos!=null ) {
-//                        bos.close();
-//                    }
-                } catch(Exception e) {
-                    String message = "Error while closing the streams" + e.getMessage();
-                    throw new Exception(message);
-                }
-            }
-        }
-    }
-    private ChannelSftp getChannelToSftpServer(Session session)throws IOException
-    {
-        ChannelSftp channelSftp = null;
 
-            try{
-                Channel channel = session.openChannel("sftp");
-                channel.connect();
-                channelSftp = (ChannelSftp)channel;
-            }
-            catch (JSchException e) {
-
-            }
-
-        return channelSftp;
-    }
 }
