@@ -29,8 +29,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -67,13 +71,15 @@ public class MainActivity extends AppCompatActivity {
     Button uploadBtn;
     Uri imageURi;
     String mCurrentPhotoPath;
+    String FILE_NAME = null;
+    String mCurrentFilePath = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        final LinearLayout linearLayout =(LinearLayout)findViewById(R.id.progress);
         imageView = (ImageView) findViewById(R.id.image);
         galleryBtn = (Button) findViewById(R.id.from_gallery);
         uploadBtn = (Button) findViewById(R.id.upload);
@@ -89,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.e("main","meassage");
+                linearLayout.setVisibility(View.VISIBLE);
                 new AsyncTask<Integer, Void, Void>(){
                     @Override
                     protected Void doInBackground(Integer... params) {
@@ -110,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     protected void onPostExecute(Void aVoid)
                     {
+                        linearLayout.setVisibility(View.INVISIBLE);
                         if(check)
                         Toast.makeText(MainActivity.this, "Image Uploaded Successfully!",
                                  Toast.LENGTH_LONG).show();
@@ -117,6 +125,12 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(MainActivity.this, "Image Can't be uploaded!",
                                     Toast.LENGTH_LONG).show();
                         super.onPostExecute(aVoid);
+                    }
+
+                    @Override
+                    protected void onProgressUpdate(Void... values) {
+
+                        super.onProgressUpdate(values);
                     }
                 }.execute(1);
             }
@@ -340,12 +354,39 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
     }
+    public  void  createFile(String text)
+    {
+        FileOutputStream fos= null;
+        try {
+            fos = openFileOutput(FILE_NAME, MODE_PRIVATE);
+            try {
+                fos.write(text.getBytes());
+                mCurrentFilePath = getFilesDir()+"/" + FILE_NAME;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+    }
     public  void executeSSHcommand()
     {
         String user = "rahulkumar.cs17";
         String password = "10/12/1998";
         String host = "172.16.1.3";
         int port=22;
+        String numbers = Integer.toString((int)(Math.random() * 1000 ));
+        String alphabets = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String alpha = "";
+        for(int i=0;i<3;i++)
+        {
+            int x = (int)(Math.random() * 26);
+            alpha+= alphabets.charAt(x);
+        }
+        String UniqueID = alpha+numbers;
 
         try {
 
@@ -360,6 +401,8 @@ public class MainActivity extends AppCompatActivity {
             session.connect();
             String text = ActualText.mOcrText.toLowerCase();
             Log.e("main",text);
+            FILE_NAME = "OCRTEXT@"+UniqueID+".txt";
+            createFile(text);
             KeyWords keyWords = new KeyWords();
             ArrayList<String> KEYWORDS = keyWords.getMkeywords();
             for (int i = 0; i < KEYWORDS.size(); i++)
@@ -383,10 +426,35 @@ public class MainActivity extends AppCompatActivity {
                 channel.disconnect();
                 ChannelSftp channel2 = (ChannelSftp) session.openChannel("sftp");
                 channel2.connect();
+
                 try
                 {
                     if (isWriteStoragePermissionGranted())
+                    {
                         channel2.put(mCurrentPhotoPath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword);
+                        String old = oldFileName(mCurrentPhotoPath);
+                        Log.e("old",old);
+                        channel2.rename("/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword+"/"+old,"/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword+"/"+"IMG@"+UniqueID+".jpg");
+                    }
+                    check=true;
+                } catch (SftpException e)
+                {
+                    e.printStackTrace();
+                }
+                Log.e("main", "Message3");
+                try {
+                    Thread.sleep(1_000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try
+                {
+                    if (isWriteStoragePermissionGranted())
+                    {
+
+                        channel2.put(mCurrentFilePath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword);
+
+                    }
                     check=true;
                 } catch (SftpException e)
                 {
@@ -430,7 +498,28 @@ public class MainActivity extends AppCompatActivity {
                     try
                     {
                         if (isWriteStoragePermissionGranted())
+                        {
                             channel2.put(mCurrentPhotoPath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0));
+                            String old = oldFileName(mCurrentPhotoPath);
+                            Log.e("old",old);
+                            channel2.rename("/home/stud/btech/cse/2017/rahulkumar.cs17/android/" +twoDKEYWORDS.get(i).get(0)+"/"+old,"/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0)+"/"+"IMG@"+UniqueID+".jpg");
+
+                        }
+                        check=true;
+                    } catch (SftpException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    Log.e("main", "Message3");
+                    try {
+                        Thread.sleep(1_000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    try
+                    {
+                        if (isWriteStoragePermissionGranted())
+                            channel2.put(mCurrentFilePath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0));
                         check=true;
                     } catch (SftpException e)
                     {
@@ -468,10 +557,20 @@ public class MainActivity extends AppCompatActivity {
         {
             Log.e("main", "getRealPathFromURI Exception : " + e.toString());
             return "";
-        } finally {
-            if (cursor != null) {
+        } finally
+        {
+            if (cursor != null)
+            {
                 cursor.close();
             }
         }
+    }
+    public String oldFileName(String x)
+    {
+        String a = x;
+        int in =a.lastIndexOf('/');
+        String a1 = a.substring(0,in+1);
+        a= a.replace(a1,"");
+        return  a;
     }
 }

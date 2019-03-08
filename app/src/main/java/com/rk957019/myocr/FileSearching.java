@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -42,6 +43,7 @@ public class FileSearching extends AppCompatActivity
     String result = null;
     String query = null;
     boolean check = false;
+    LinearLayout linearLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -49,6 +51,7 @@ public class FileSearching extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_searching);
       //  Button searchBtn = (Button) findViewById(R.id.search);
+      linearLayout =(LinearLayout) findViewById(R.id.downloading);
         SearchView searchView = (SearchView) findViewById(R.id.searching);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
         {
@@ -106,7 +109,7 @@ public class FileSearching extends AppCompatActivity
 
     }
 
-    private void updateUI(final ArrayList<String> fileNames)
+    public void updateUI(final ArrayList<String> fileNames)
     {
         ListView fileNamesListView = (ListView) findViewById(R.id.listview);
         fileNamesListView.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,fileNames));
@@ -116,7 +119,7 @@ public class FileSearching extends AppCompatActivity
             public void onItemClick(final AdapterView<?> adapterView, View view,final int i, long l)
             {
                //  Toast.makeText(FileSearching.this,fileNames.get(i),Toast.LENGTH_LONG).show();
-
+                linearLayout.setVisibility(View.VISIBLE);
                 new  AsyncTask<Integer, Void, Void>(){
                     @Override
                     protected Void doInBackground(Integer... params) {
@@ -135,6 +138,7 @@ public class FileSearching extends AppCompatActivity
                     @Override
                     protected void onPostExecute(Void aVoid)
                     {
+                        linearLayout.setVisibility(View.INVISIBLE);
                           if(check)
                           {
                           Toast.makeText(FileSearching.this, "File Downloaded Successfully!",
@@ -158,12 +162,10 @@ public class FileSearching extends AppCompatActivity
         String Filename = filename;
         if(Filename.contains("/"))
             Filename = changeFilename(Filename);
-
-       String mFilePath = "/storage/emulated/0/Download/"+Filename;
-
-        File file=new File(mFilePath);
-           Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(Uri.fromFile(file), "text/plain");
+            String mFilePath = "/storage/emulated/0/Download/"+Filename;
+            File file=new File(mFilePath);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(Uri.fromFile(file), "image/jpg");
             intent = Intent.createChooser(intent, "Open File");
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
@@ -183,6 +185,7 @@ public class FileSearching extends AppCompatActivity
 
     private void DownloadFile(String s)
     {
+        Log.e("s=",s);
         String user = "rahulkumar.cs17";
         String password = "10/12/1998";
         String host = "172.16.1.3";
@@ -238,6 +241,8 @@ public class FileSearching extends AppCompatActivity
             }
             else
             {
+               names=names.replace("OCRTEXT","IMG");
+               names=names.replace("txt","jpg");
                fileNames.add(names);
                names = "";
             }
@@ -282,11 +287,8 @@ public class FileSearching extends AppCompatActivity
             try{Thread.sleep(1000);}catch(Exception ee){}
 
             channel.disconnect();
-
             session.disconnect();
-
             Log.e("main",baos.toString()+"hello");
-
         } catch (JSchException e) {
            e.printStackTrace();
         }

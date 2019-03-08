@@ -31,14 +31,10 @@ public class KeyWords
         mkeywords.add("sriparna");
         mkeywords.add("hod cse");
         mkeywords.add("director");
+        mkeywords.add("director_office");
         mkeywords.add("associate dean");
         mkeywords.add("r&d");
-
         mkeywords.add("inspection");
-        mkeywords.add("1701CS");
-        mkeywords.add("1801CS");
-        mkeywords.add("1601CS");
-        mkeywords.add("1501CS");
         mkeywords.add("assistant registrar");
         mkeywords.add("registrar");
         mkeywords.add("Junior Superintendent");
@@ -47,7 +43,6 @@ public class KeyWords
         mkeywords.add("Jeetendra Kumar");
         mkeywords.add("Akhilendra");
         mkeywords.add("Ashish Kumar");
-        mkeywords.add("Probir");
         mkeywords.add("Ranganathan");
         mkeywords.add("Sanjoy Kumar");
         mkeywords.add("Assistant Librarian");
@@ -58,10 +53,10 @@ public class KeyWords
         mkeywords.add("shailendra kr. verma");
         mkeywords.add("sanjay");
        // mkeywords.add("purchase");
-        mkeywords.add("gian");
+
         mkeywords.add("asim kumar maiti");
         // for testing
-        mkeywords.add("sociology");
+       // mkeywords.add("sociology");
         mkeywords.add("jts");
         mkeywords.add("scholarship");
        return;
@@ -76,12 +71,29 @@ public class KeyWords
         temp.add("tuition fee");
         temp.add("faculty advisor");
         temp.add("registration");
+        temp.add("1701CS");
+        temp.add("1801CS");
+        temp.add("1601CS");
+        temp.add("1501CS");
+        temp.add("1811CS");
+        temp.add("1711CS");
+        temp.add("PCS1");
+        temp.add("roll no");
+        temp.add("gian");
+        temp.add("midsem");
+        temp.add("endsem");
+        temp.add("research");
+        temp.add("attendance");
         m2d_keywords.add(temp);
         ArrayList<String> temp1 = new ArrayList<String>();
         temp1.add("accounts");
         temp1.add("purchase");
+        temp1.add("purchasing");
+        temp1.add("financial");
+        temp1.add("finance");
         temp1.add("payment");
         temp1.add("reimbursement");
+        temp1.add("amount");
         m2d_keywords.add(temp1);
         ArrayList<String> temp2 = new ArrayList<String>();
         temp2.add("hospital");
