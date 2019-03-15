@@ -29,7 +29,8 @@ public class KeyWords
         mkeywords.add("rajiv");
         mkeywords.add("joydeep");
         mkeywords.add("sriparna");
-        mkeywords.add("hod cse");
+        mkeywords.add("hod,cse");
+        mkeywords.add("hod, cse");
         mkeywords.add("director");
         mkeywords.add("director_office");
         mkeywords.add("associate dean");

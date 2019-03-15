@@ -388,6 +388,7 @@ public class MainActivity extends AppCompatActivity {
         }
         String UniqueID = alpha+numbers;
 
+
         try {
 
             JSch jsch = new JSch();
@@ -403,16 +404,9 @@ public class MainActivity extends AppCompatActivity {
             Log.e("main",text);
             FILE_NAME = "OCRTEXT@"+UniqueID+".txt";
             createFile(text);
-            KeyWords keyWords = new KeyWords();
-            ArrayList<String> KEYWORDS = keyWords.getMkeywords();
-            for (int i = 0; i < KEYWORDS.size(); i++)
+            if(!check)
             {
-
-                String keyword = KEYWORDS.get(i);
-                Log.e("main",keyword);
-                keyword = keyword.toLowerCase();
-                if(!text.contains(keyword))continue;
-                keyword = keyword.replaceAll("\\s+","");
+                String keyword = "misc";
                 ChannelExec channel = (ChannelExec) session.openChannel("exec");
                 channel.setCommand("cd /home/stud/btech/cse/2017/rahulkumar.cs17/android && mkdir " + keyword);
                 channel.connect();
@@ -467,20 +461,89 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 channel2.disconnect();
+            }
+            KeyWords keyWords = new KeyWords();
+            ArrayList<String> KEYWORDS = keyWords.getMkeywords();
+            for (int i = 0; i < KEYWORDS.size(); i++)
+            {
+
+                String keyword = KEYWORDS.get(i);
+                Log.e("main",keyword);
+                keyword = keyword.toLowerCase();
+                if(!text.contains(keyword))continue;
+                keyword = keyword.replaceAll("\\s+","");
+                if(keyword.contentEquals("r&d"))
+                    keyword="ResearchAndDevelopment";
+                ChannelExec channel = (ChannelExec) session.openChannel("exec");
+                channel.setCommand("cd /home/stud/btech/cse/2017/rahulkumar.cs17/android && mkdir " + keyword);
+                channel.connect();
+
+                Log.e("main", "Message2");
+                try {
+                    Thread.sleep(1_00);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                channel.disconnect();
+                ChannelExec channel2 = (ChannelExec) session.openChannel("exec");
+
+
+
+                    if (isWriteStoragePermissionGranted())
+                    {
+                        channel2.setCommand("ln -s "+"/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + "misc"+"/"+"IMG@"+UniqueID+".jpg"+" /home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword);
+//                        String old = oldFileName(mCurrentPhotoPath);
+//                        Log.e("old",old);
+//                        channel2.rename("/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword+"/"+old,"/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword+"/"+"IMG@"+UniqueID+".jpg");
+                        check=true;
+                    }
+
+                Log.e("main", "Message3");
+                channel2.connect();
+                try {
+                    Thread.sleep(1_00);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+//                try
+//                {
+//                    if (isWriteStoragePermissionGranted())
+//                    {
+//
+//                        channel2.put(mCurrentFilePath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + keyword);
+//
+//                    }
+//                    check=true;
+//                } catch (SftpException e)
+//                {
+//                    e.printStackTrace();
+//                }
+//                Log.e("main", "Message3");
+//                try {
+//                    Thread.sleep(1_000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+                channel2.disconnect();
 
 
             }
             Log.e("main","done");
+            boolean x = false;
           ArrayList<ArrayList<String>> twoDKEYWORDS = keyWords.getM2d_keywords();
             for(int i=0;i<twoDKEYWORDS.size();i++)
             {
+                x=false;
+
                 for(int j=0;j<twoDKEYWORDS.get(i).size();j++)
                 {
+                    if(x)break;
                     String keyword = twoDKEYWORDS.get(i).get(j);
                     Log.e("main","done");
                     Log.e("main",keyword);
                     keyword = keyword.toLowerCase();
                     if(!text.contains(keyword))continue;
+                    x=true;
                     keyword = keyword.replaceAll("\\s+","");
                     ChannelExec channel = (ChannelExec) session.openChannel("exec");
                     channel.setCommand("cd /home/stud/btech/cse/2017/rahulkumar.cs17/android && mkdir " + twoDKEYWORDS.get(i).get(0));
@@ -488,52 +551,51 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.e("main", "Message2");
                     try {
-                        Thread.sleep(1_000);
+                        Thread.sleep(1_00);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     channel.disconnect();
-                    ChannelSftp channel2 = (ChannelSftp) session.openChannel("sftp");
-                    channel2.connect();
-                    try
-                    {
+                    ChannelExec channel2 = (ChannelExec) session.openChannel("exec");
+
+
                         if (isWriteStoragePermissionGranted())
                         {
-                            channel2.put(mCurrentPhotoPath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0));
-                            String old = oldFileName(mCurrentPhotoPath);
-                            Log.e("old",old);
-                            channel2.rename("/home/stud/btech/cse/2017/rahulkumar.cs17/android/" +twoDKEYWORDS.get(i).get(0)+"/"+old,"/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0)+"/"+"IMG@"+UniqueID+".jpg");
-
+                            channel2.setCommand("ln -s "+"/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + "misc"+"/"+"IMG@"+UniqueID+".jpg"+"  /home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0));
+//                            channel2.put(mCurrentPhotoPath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0));
+//                            String old = oldFileName(mCurrentPhotoPath);
+//                            Log.e("old",old);
+//                            channel2.rename("/home/stud/btech/cse/2017/rahulkumar.cs17/android/" +twoDKEYWORDS.get(i).get(0)+"/"+old,"/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0)+"/"+"IMG@"+UniqueID+".jpg");
+                            check=true;
                         }
-                        check=true;
-                    } catch (SftpException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    channel2.connect();
+
+
                     Log.e("main", "Message3");
                     try {
-                        Thread.sleep(1_000);
+                        Thread.sleep(1_00);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    try
-                    {
-                        if (isWriteStoragePermissionGranted())
-                            channel2.put(mCurrentFilePath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0));
-                        check=true;
-                    } catch (SftpException e)
-                    {
-                        e.printStackTrace();
-                    }
-                    Log.e("main", "Message3");
-                    try {
-                        Thread.sleep(1_000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+//                    try
+//                    {
+//                        if (isWriteStoragePermissionGranted())
+//                            channel2.put(mCurrentFilePath, "/home/stud/btech/cse/2017/rahulkumar.cs17/android/" + twoDKEYWORDS.get(i).get(0));
+//                        check=true;
+//                    } catch (SftpException e)
+//                    {
+//                        e.printStackTrace();
+//                    }
+//                    Log.e("main", "Message3");
+//                    try {
+//                        Thread.sleep(1_000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
                     channel2.disconnect();
                 }
             }
+
 
         }
         catch(JSchException e)
